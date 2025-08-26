@@ -5,7 +5,7 @@ import SearchResults from './components/SearchResults';
 import MapVisualization from './components/MapVisualization';
 import DatasetModal from './components/DatasetModal';
 import { Dataset, CartItem } from './types';
-import { mockDatasets } from './data/mockData';
+// import { mockDatasets } from './data/mockData';
 
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,16 +19,28 @@ function App() {
     setSearchQuery(query);
     
     // Simulate API call with mock data filtering
-    setTimeout(() => {
-      const filtered = mockDatasets.filter(dataset => 
-        dataset.title.toLowerCase().includes(query.toLowerCase()) ||
-        dataset.description.toLowerCase().includes(query.toLowerCase()) ||
-        dataset.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
-      );
-      setSearchResults(filtered);
+  //     setTimeout(() => {
+  //     const filtered = mockDatasets.filter(dataset => 
+  //       dataset.title.toLowerCase().includes(query.toLowerCase()) ||
+  //       dataset.description.toLowerCase().includes(query.toLowerCase()) ||
+  //       dataset.tags.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+  //     );
+  //     setSearchResults(filtered);
+  //     setIsLoading(false);
+  //   }, 800);
+  // };
+    try {
+      const res = await fetch(`http://localhost:4000/api/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      setSearchResults(data);
+    } catch (err) {
+      console.error("Error fetching datasets:", err);
+      setSearchResults([]);
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
+  
 
   const addToCart = (dataset: Dataset) => {
     const existingItem = cartItems.find(item => item.dataset.id === dataset.id);
