@@ -104,7 +104,7 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
             {dataset.variables
               .sort((a, b) => b.similarity - a.similarity)
               .slice(0, 3)
-              .map((variable, index) => (
+              .map((variable) => (
               <div key={variable.id} className="flex items-start space-x-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
                 <div className="flex-1 min-w-0">

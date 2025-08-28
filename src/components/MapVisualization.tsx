@@ -1,26 +1,21 @@
-// MapVisualization.tsx
+//MapVisualization.tsx
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Rectangle, useMap } from 'react-leaflet';
-import L from 'leaflet';
+
 import { ZoomIn, ZoomOut, Layers, Move3D } from 'lucide-react';
 import { Dataset } from '../types';
 
-// Import Leaflet CSS
+//Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
 
-// Fix for default marker icon issue with Webpack
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
+//Fix for default marker icon issue with Webpack
+
 
 interface MapVisualizationProps {
   datasets: Dataset[];
 }
 
-// Custom component to handle map interactions like zoom
+//Custom component to handle map interactions like zoom
 const MapController: React.FC<{ zoomLevel: number }> = ({ zoomLevel }) => {
   const map = useMap();
   useEffect(() => {
@@ -31,9 +26,9 @@ const MapController: React.FC<{ zoomLevel: number }> = ({ zoomLevel }) => {
 
 const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
   const [zoomLevel, setZoomLevel] = useState(3);
-  const [showLayers, setShowLayers] = useState(true); // This will now control the legend visibility
+  const [showLayers, setShowLayers] = useState(true); //This will now control the legend visibility
 
-  // Calculate center point from datasets
+  //Calculate center point from datasets
   const centerLat = datasets.length > 0
     ? datasets.reduce((sum, d) => sum + d.coordinates.lat, 0) / datasets.length
     : 39.8283;
@@ -84,7 +79,7 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
           center={[centerLat, centerLng]}
           zoom={zoomLevel}
           scrollWheelZoom={true}
-          className="h-full w-full z-0" // Ensure map takes full height and width
+          className="h-full w-full z-0" //Ensure map takes full height and width
         >
           <MapController zoomLevel={zoomLevel} />
           <TileLayer

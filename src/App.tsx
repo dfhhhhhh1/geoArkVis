@@ -6,7 +6,7 @@ import MapVisualization from './components/MapVisualization';
 import DatasetModal from './components/DatasetModal';
 import { Dataset, CartItem } from './types';
 
-// Interface for the new backend API response
+//Interface for the new backend API response
 interface BackendSearchResult {
   dataset_id: string;
   attr_id: string;
@@ -27,9 +27,9 @@ function App() {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Function to transform backend response to Dataset format
+  //Function to transform backend response to Dataset format
   const transformBackendResponse = (backendResults: BackendSearchResult[]): Dataset[] => {
-    // Group results by dataset_id to create consolidated datasets
+    //Group results by dataset_id to create consolidated datasets
     const datasetGroups = backendResults.reduce((acc, result) => {
       const { dataset_id } = result;
       if (!acc[dataset_id]) {
@@ -39,26 +39,26 @@ function App() {
       return acc;
     }, {} as Record<string, BackendSearchResult[]>);
 
-    // Transform each group into a Dataset
+    //Transform each group into a Dataset
     return Object.entries(datasetGroups).map(([datasetId, results]) => {
       const firstResult = results[0];
       const allTags = results.flatMap(r => {
         try {
-          // Parse tags string that looks like "['tag1', 'tag2']"
+          //Parse tags string that looks like "['tag1', 'tag2']"
           return JSON.parse(r.tags.replace(/'/g, '"'));
         } catch {
-          // Fallback if parsing fails
-          return r.tags.split(',').map(t => t.trim().replace(/[\[\]']/g, ''));
+          //Fallback if parsing fails
+          return r.tags.split(',').map(t => t.trim().replace(/[[\]']/g, ''));
         }
       });
       
       const uniqueTags = [...new Set(allTags.filter(tag => tag && tag.length > 0))];
       const allFields = results.map(r => r.attr_desc);
       
-      // Generate mock coordinates based on entity type and dataset ID
+      //Generate mock coordinates based on entity type and dataset ID
       const mockCoordinates = generateMockCoordinates(firstResult.entity_type, datasetId);
       
-      // Determine coverage based on entity type
+      //Determine coverage based on entity type
       const coverage = {
         geographic: firstResult.entity_type === 'STATE' ? 'Missouri State' : 
                    firstResult.entity_type === 'COUNTY' ? 'Missouri Counties' : 
@@ -80,7 +80,7 @@ function App() {
         boundingBox: mockCoordinates.boundingBox,
         downloadUrl: `http://localhost:4000/api/download/${datasetId}`,
         previewUrl: `http://localhost:4000/api/preview/${datasetId}`,
-        // Add extra metadata for the new fields
+        //Add extra metadata for the new fields
         variables: results.map(r => ({
           id: r.attr_id,
           label: r.attr_label,
@@ -90,12 +90,13 @@ function App() {
         entityType: firstResult.entity_type,
         similarity: Math.max(...results.map(r => r.similarity))
       };
-    }).sort((a, b) => (b as any).similarity - (a as any).similarity); // Sort by relevance
+    }).sort((a: { similarity: number }, b: { similarity: number }) => 
+      b.similarity - a.similarity );
   };
 
-  // Generate mock coordinates based on entity type and dataset ID
+  //Generate mock coordinates based on entity type and dataset ID
   const generateMockCoordinates = (entityType: string, datasetId: string) => {
-    // Missouri bounds
+    //Missouri bounds
     const missouriBounds = {
       north: 40.61364,
       south: 35.995683,
@@ -103,7 +104,7 @@ function App() {
       west: -95.774704
     };
 
-    // Generate pseudo-random coordinates based on dataset ID
+    //Generate pseudo-random coordinates based on dataset ID
     const hash = datasetId.split('').reduce((a, b) => {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
@@ -126,14 +127,14 @@ function App() {
     };
   };
 
-  // Estimate file size based on number of variables and entity type
+  //Estimate file size based on number of variables and entity type
   const estimateFileSize = (variableCount: number, entityType: string) => {
     const baseSize = entityType === 'STATE' ? 1 : entityType === 'COUNTY' ? 10 : 5;
     const totalSize = baseSize * variableCount;
     return totalSize > 1024 ? `${(totalSize / 1024).toFixed(1)} GB` : `${totalSize} MB`;
   };
 
-  // Format last updated date
+  //Format last updated date
   const formatLastUpdated = (endDate: string) => {
     const year = parseInt(endDate);
     const currentYear = new Date().getFullYear();
@@ -160,7 +161,6 @@ function App() {
     } catch (err) {
       console.error("Error fetching datasets:", err);
       setSearchResults([]);
-      // You might want to show an error message to the user here
     } finally {
       setIsLoading(false);
     }
@@ -183,7 +183,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Background Pattern */}
+      {/*Background Pattern */}
       <div className="fixed inset-0 opacity-5">
         <div className="absolute inset-0" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3Ccircle cx='53' cy='53' r='1'/%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
@@ -198,7 +198,7 @@ function App() {
         />
         
         <main className="container mx-auto px-4 py-8">
-          {/* Hero Section */}
+          {/*Hero Section */}
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
               Discover Missouri Geospatial Data
@@ -211,7 +211,7 @@ function App() {
             <SearchBar onSearch={handleSearch} isLoading={isLoading} />
           </div>
 
-          {/* Main Content Area */}
+          {/* Main Content Area*/}
           {searchResults.length > 0 && (
             <div className="grid lg:grid-cols-2 gap-8 mb-8">
               {/* Search Results */}
