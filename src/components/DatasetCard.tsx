@@ -2,11 +2,12 @@ import React from 'react';
 import { 
   ShoppingCart, 
   Eye, 
-  Download, 
   Clock, 
   Database, 
   MapPin, 
-  CheckCircle 
+  CheckCircle,
+  BarChart3,
+  Star
 } from 'lucide-react';
 import { Dataset } from '../types';
 
@@ -28,10 +29,18 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-slate-800 mb-2 hover:text-blue-600 cursor-pointer" 
-              onClick={() => onSelect(dataset)}>
-            {dataset.title}
-          </h3>
+          <div className="flex items-center space-x-2 mb-2">
+            <h3 className="text-lg font-semibold text-slate-800 hover:text-blue-600 cursor-pointer" 
+                onClick={() => onSelect(dataset)}>
+              {dataset.title}
+            </h3>
+            {dataset.similarity && (
+              <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                <Star className="w-3 h-3 fill-current" />
+                <span>{(dataset.similarity * 100).toFixed(0)}%</span>
+              </div>
+            )}
+          </div>
           <p className="text-slate-600 text-sm leading-relaxed mb-3">
             {dataset.description}
           </p>
@@ -48,44 +57,98 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
             </div>
             <div className="flex items-center space-x-1">
               <Clock className="w-4 h-4" />
-              <span>{dataset.lastUpdated}</span>
+              <span>{dataset.coverage.temporal}</span>
             </div>
           </div>
+
+          {/* Entity Type Badge */}
+          {dataset.entityType && (
+            <div className="mb-3">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                dataset.entityType === 'STATE' 
+                  ? 'bg-purple-100 text-purple-700' 
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {dataset.entityType} Level Data
+              </span>
+            </div>
+          )}
         </div>
         
-        {/* Preview Thumbnail */}
-        {dataset.previewUrl && (
-          <div className="ml-4 flex-shrink-0">
+        {/* Preview Thumbnail or Variable Count */}
+        <div className="ml-4 flex-shrink-0">
+          {dataset.previewUrl ? (
             <img 
               src={dataset.previewUrl} 
               alt={`${dataset.title} preview`}
               className="w-20 h-20 rounded-lg object-cover border border-slate-200"
             />
-          </div>
-        )}
-      </div>
-
-      {/* Fields Preview */}
-      <div className="mb-4">
-        <p className="text-sm font-medium text-slate-700 mb-2">
-          Contains fields on:
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {dataset.fields.slice(0, 4).map((field, index) => (
-            <span 
-              key={index}
-              className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md font-medium"
-            >
-              {field.replace('_', ' ')}
-            </span>
-          ))}
-          {dataset.fields.length > 4 && (
-            <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-md">
-              +{dataset.fields.length - 4} more
-            </span>
+          ) : (
+            <div className="w-20 h-20 rounded-lg border border-slate-200 bg-slate-50 flex flex-col items-center justify-center">
+              <BarChart3 className="w-8 h-8 text-slate-400 mb-1" />
+              <span className="text-xs text-slate-500 font-medium">
+                {dataset.variables?.length || dataset.fields.length} vars
+              </span>
+            </div>
           )}
         </div>
       </div>
+
+      {/* Variables Preview */}
+      {dataset.variables && dataset.variables.length > 0 ? (
+        <div className="mb-4">
+          <p className="text-sm font-medium text-slate-700 mb-2">
+            Key variables (showing top {Math.min(3, dataset.variables.length)}):
+          </p>
+          <div className="space-y-2">
+            {dataset.variables
+              .sort((a, b) => b.similarity - a.similarity)
+              .slice(0, 3)
+              .map((variable, index) => (
+              <div key={variable.id} className="flex items-start space-x-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-slate-700 font-medium truncate">
+                    {variable.description}
+                  </p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className="text-xs text-slate-500">
+                      Match: {(variable.similarity * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {dataset.variables.length > 3 && (
+              <p className="text-xs text-slate-500 mt-2">
+                +{dataset.variables.length - 3} more variables
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Fallback to fields display */
+        <div className="mb-4">
+          <p className="text-sm font-medium text-slate-700 mb-2">
+            Contains data on:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {dataset.fields.slice(0, 3).map((field, index) => (
+              <span 
+                key={index}
+                className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md font-medium"
+              >
+                {field.length > 40 ? field.substring(0, 40) + '...' : field}
+              </span>
+            ))}
+            {dataset.fields.length > 3 && (
+              <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-md">
+                +{dataset.fields.length - 3} more
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Tags */}
       <div className="mb-4">
@@ -98,6 +161,11 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
               #{tag}
             </span>
           ))}
+          {dataset.tags.length > 5 && (
+            <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-md">
+              +{dataset.tags.length - 5}
+            </span>
+          )}
         </div>
       </div>
 
@@ -106,7 +174,7 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
         <div className="flex items-center space-x-4 text-sm text-slate-500">
           <span className="font-medium">{dataset.fileSize}</span>
           <span>•</span>
-          <span>{dataset.coverage.temporal}</span>
+          <span>{dataset.lastUpdated}</span>
         </div>
         
         <div className="flex items-center space-x-2">
@@ -115,7 +183,7 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
             className="flex items-center space-x-1 px-3 py-1.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors text-sm"
           >
             <Eye className="w-4 h-4" />
-            <span>View Details</span>
+            <span>Details</span>
           </button>
           
           <button
