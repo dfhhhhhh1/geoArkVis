@@ -4,6 +4,7 @@ to run, run these commands
 
 1. Open a new terminal
 2. Go to GeoARKVis folder...
+
 `python -m venv myEnv`
 
 `source myEnv/Scripts/activate` OR `source myEnv/bin/activate`
