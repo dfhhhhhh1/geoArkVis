@@ -12,7 +12,7 @@ Go to GeoARKVis folder...
 
 `npm run dev`
 
-Go to backend/
+Go to backend folder...
 
 `pip install numpy`
 
