@@ -3,6 +3,7 @@ This is the UI for the GeoARK project. It needs a backend to communicate with fo
 to run, run these commands
 
 Open GeoARKVis folder.
+
 `python -m venv myEnv`
 
 `source myEnv/Scripts/activate` OR `source myEnv/bin/activate`
@@ -12,6 +13,7 @@ Open GeoARKVis folder.
 `npm run dev`
 
 Go to backend/
+
 `pip install numpy`
 
 `pip install sentence_transformers`
