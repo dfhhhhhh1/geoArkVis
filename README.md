@@ -12,8 +12,10 @@ to run, run these commands
 `npm install`
 
 `npm run dev`
+
 3. Open the local host URL
 4. Go to backend folder...
+
 `pip install numpy`
 
 `pip install sentence_transformers`
