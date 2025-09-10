@@ -2,7 +2,7 @@ This is the UI for the GeoARK project. It needs a backend to communicate with fo
 
 to run, run these commands
 
-Open GeoARKVis folder.
+Go to GeoARKVis folder...
 
 `python -m venv myEnv`
 
