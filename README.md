@@ -7,7 +7,7 @@ to run, run these commands
 
 `python -m venv environmentName`
 
-`source environmentName/Scripts/activate` OR `source environmentName/bin/activate`
+`source environmentName/Scripts/activate` (Windows) OR `source environmentName/bin/activate` (Linux/Mac)
 
 `npm install`
 
