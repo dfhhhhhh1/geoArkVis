@@ -20,7 +20,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading }) => {
     "population density in midwest cities",
     "river pollution measurements for 2023",
     "satellite imagery of deforestation",
-    "urban temperature data major cities",
+    "2023 pulmonary cancer rates in Missouri by tract",
     "agricultural soil quality data"
   ];
 

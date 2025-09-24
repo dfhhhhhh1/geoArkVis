@@ -2,8 +2,27 @@ This is the UI for the GeoARK project. It needs a backend to communicate with fo
 
 to run, run these commands
 
-npm install 
+1. Open a new terminal
+2. Go to GeoARKVis folder...
 
-npm run dev
+`python -m venv environmentName`
+
+`source environmentName/Scripts/activate` (Windows) OR `source environmentName/bin/activate` (Linux/Mac)
+
+`npm install`
+
+`npm run dev`
+
+3. Open the local host URL
+4. Go to backend folder...
+
+`pip install numpy`
+
+`pip install sentence_transformers`
+
+`npm install`
+
+`npm start`
+
 
 
