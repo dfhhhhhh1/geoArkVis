@@ -1,21 +1,17 @@
-//MapVisualization.tsx
+// MapVisualization.tsx
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Rectangle, useMap } from 'react-leaflet';
-
 import { ZoomIn, ZoomOut, Layers, Move3D } from 'lucide-react';
 import { Dataset } from '../types';
-
-//Import Leaflet CSS
 import 'leaflet/dist/leaflet.css';
-
-//Fix for default marker icon issue with Webpack
-
+import { GeoJSON } from 'react-leaflet'; // Import GeoJSON component
+// Fix for default marker icon issue with Webpack
 
 interface MapVisualizationProps {
   datasets: Dataset[];
 }
 
-//Custom component to handle map interactions like zoom
+// Custom component to handle map interactions like zoom
 const MapController: React.FC<{ zoomLevel: number }> = ({ zoomLevel }) => {
   const map = useMap();
   useEffect(() => {
@@ -26,9 +22,20 @@ const MapController: React.FC<{ zoomLevel: number }> = ({ zoomLevel }) => {
 
 const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
   const [zoomLevel, setZoomLevel] = useState(3);
-  const [showLayers, setShowLayers] = useState(true); //This will now control the legend visibility
+  const [showLayers, setShowLayers] = useState(true);
+  const [countyData, setCountyData] = useState<any>(null); // State to hold GeoJSON data
 
-  //Calculate center point from datasets
+  useEffect(() => {
+    // Fetch the GeoJSON data from the public folder
+    fetch('/counties.geojson')
+      .then(response => response.json())
+      .then(data => {
+        setCountyData(data);
+      })
+      .catch(error => console.error("Failed to load GeoJSON data:", error));
+  }, []); // Empty dependency array to run only once on component mount
+
+  // ... (rest of your component)
   const centerLat = datasets.length > 0
     ? datasets.reduce((sum, d) => sum + d.coordinates.lat, 0) / datasets.length
     : 39.8283;
@@ -72,21 +79,42 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
           </div>
         </div>
       </div>
-
       {/* Map Display using Leaflet */}
       <div className="relative h-80">
         <MapContainer
           center={[centerLat, centerLng]}
           zoom={zoomLevel}
           scrollWheelZoom={true}
-          className="h-full w-full z-0" //Ensure map takes full height and width
+          className="h-full w-full z-0"
         >
           <MapController zoomLevel={zoomLevel} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          
+          {/* Use the GeoJSON component to render the county shapes */}
+          {countyData && (
+            <GeoJSON
+              data={countyData}
+              style={(feature) => ({
+                fillColor: 'transparent',
+                weight: 1,
+                opacity: 1,
+                color: 'grey',
+                dashArray: '3',
+                fillOpacity: 0.1,
+              })}
+              onEachFeature={(feature, layer) => {
+                // Example of how to add a popup for each county
+                if (feature.properties && feature.properties.NAME) {
+                  layer.bindPopup(`<h3>${feature.properties.NAME} County</h3>`);
+                }
+              }}
+            />
+          )}
 
+          {/* ... (rest of your markers and rectangles) */}
           {datasets.map((dataset) => (
             <React.Fragment key={dataset.id}>
               {/* Marker for dataset coordinates */}
@@ -100,7 +128,6 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
                   )}
                 </Popup>
               </Marker>
-
               {/* Bounding box for dataset coverage */}
               {dataset.boundingBox && (
                 <Rectangle
@@ -120,7 +147,6 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
             </React.Fragment>
           ))}
         </MapContainer>
-
         {/* Interactive Controls Overlay - Keep your existing buttons */}
         <div className="absolute top-4 right-4 z-10"> {/* z-10 to keep controls above the map */}
           <div className="bg-white rounded-lg shadow-lg p-2 space-y-1">
@@ -129,7 +155,6 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
             </button>
           </div>
         </div>
-
         {/* Legend */}
         {showLayers && (
           <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 text-xs z-10"> {/* z-10 for legend */}
@@ -143,11 +168,14 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
                 <div className="w-3 h-3 border-2 border-blue-600 bg-blue-400 opacity-50"></div>
                 <span className="text-slate-600">Coverage Area (Bounding Box)</span>
               </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 border border-gray-500"></div>
+                <span className="text-slate-600">County Boundaries</span>
+              </div>
             </div>
           </div>
         )}
       </div>
-
       {/* Map Footer */}
       <div className="p-3 bg-slate-50 text-xs text-slate-500 border-t border-slate-200">
         <div className="flex items-center justify-between">
