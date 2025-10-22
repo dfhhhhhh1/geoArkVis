@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "langchain": "^1.0.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.514.0",
+    "ollama": "^0.6.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-leaflet": "^5.0.0"
