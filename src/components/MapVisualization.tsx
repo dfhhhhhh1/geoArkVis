@@ -7,6 +7,7 @@ import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icon issue with Webpack
 interface Dataset {
+// ... (existing Dataset interface)
   id: string;
   title: string;
   description: string;
@@ -34,6 +35,7 @@ interface MapVisualizationProps {
 
 // Custom component to handle map interactions like zoom
 const MapController: React.FC<{ zoomLevel: number }> = ({ zoomLevel }) => {
+// ... (existing MapController)
   const map = useMap();
   useEffect(() => {
     map.setZoom(zoomLevel);
@@ -47,10 +49,13 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
   const [countyData, setCountyData] = useState<any>(null);
   const [csvData, setCsvData] = useState<any[]>([]);
   const [selectedMetric, setSelectedMetric] = useState<string>('');
+  const [selectedDenominator, setSelectedDenominator] = useState<string>('None'); // 1. New State for Denominator
   const [availableMetrics, setAvailableMetrics] = useState<string[]>([]);
-
+  const [availableDenominators, setAvailableDenominators] = useState<string[]>(['None']); // New state for denominators
+  
   // Load GeoJSON
   useEffect(() => {
+// ... (existing GeoJSON load)
     fetch('/counties.geojson')
       .then(response => response.json())
       .then(data => {
@@ -76,6 +81,8 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
                 key => key.toLowerCase() !== 'fips'
               );
               setAvailableMetrics(metrics);
+              // 2. Update Denominators List
+              setAvailableDenominators(['None', ...metrics]); 
               if (metrics.length > 0) setSelectedMetric(metrics[0]);
             }
           },
@@ -102,22 +109,47 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
     return map;
   }, [csvData]);
 
+  // Helper function to get the value (normalized or raw)
+  const getDisplayValue = (rowData: any) => {
+    if (!rowData || !selectedMetric) return undefined;
+
+    const numerator = rowData[selectedMetric];
+    if (typeof numerator !== 'number' || isNaN(numerator)) return undefined;
+
+    if (selectedDenominator === 'None') {
+      return numerator;
+    }
+
+    const denominator = rowData[selectedDenominator];
+    if (typeof denominator !== 'number' || isNaN(denominator) || denominator === 0) {
+      return undefined; // Cannot normalize
+    }
+
+    // Normalize and multiply by a large number (e.g., 100,000) for better visibility as a rate per population
+    return (numerator / denominator);
+  };
+
   // Get min and max values for the selected metric
   const { min, max } = React.useMemo(() => {
     if (!selectedMetric || csvData.length === 0) return { min: 0, max: 1 };
     
+    // 4. Use normalized values for min/max calculation
     const values = csvData
-      .map(row => row[selectedMetric])
+      .map(getDisplayValue)
       .filter(val => typeof val === 'number' && !isNaN(val));
     
+    // Handle case where all values are filtered out
+    if (values.length === 0) return { min: 0, max: 1 };
+
     return {
       min: Math.min(...values),
       max: Math.max(...values)
     };
-  }, [csvData, selectedMetric]);
+  }, [csvData, selectedMetric, selectedDenominator]); // 4. Add selectedDenominator dependency
 
   // Color scale function
   const getColor = (value: number) => {
+// ... (existing getColor function - no change, as it uses min/max)
     if (value === undefined || value === null || isNaN(value)) return '#e0e0e0';
     
     const normalized = (value - min) / (max - min);
@@ -142,7 +174,8 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
   const getFeatureStyle = (feature: any) => {
     const fips = String(feature.properties.GEOID || feature.properties.FIPS || '').padStart(5, '0');
     const rowData = dataByFips.get(fips);
-    const value = rowData ? rowData[selectedMetric] : undefined;
+    // 5. Use the helper to get the display value
+    const value = getDisplayValue(rowData);
     
     return {
       fillColor: getColor(value),
@@ -153,6 +186,23 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
     };
   };
 
+  // Helper function for display text in the popup/legend
+  const getMetricDisplayLabel = () => {
+    return selectedDenominator === 'None' 
+      ? selectedMetric
+      : `${selectedMetric} / ${selectedDenominator}`;
+  };
+  
+  // Helper function to format the displayed value
+  const formatValue = (value: number | undefined) => {
+      if (typeof value !== 'number' || isNaN(value)) return 'No data';
+      if (selectedDenominator !== 'None') {
+          // Format normalized value as a percentage or with more decimal places
+          return value.toFixed(3); 
+      }
+      return value.toLocaleString();
+  }
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-lg">
       {/* Map Header */}
@@ -160,6 +210,8 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h3 className="font-semibold text-slate-800">Data Coverage Map</h3>
+            
+            {/* Numerator (Selected Metric) Dropdown */}
             {availableMetrics.length > 0 && (
               <select
                 value={selectedMetric}
@@ -171,8 +223,26 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
                 ))}
               </select>
             )}
+
+            {/* 3. Denominator (Normalization) Dropdown */}
+            {availableDenominators.length > 1 && (
+              <>
+                <span className="text-sm text-slate-600">Normalized by:</span>
+                <select
+                  value={selectedDenominator}
+                  onChange={(e) => setSelectedDenominator(e.target.value)}
+                  className="text-sm border border-slate-300 rounded-lg px-3 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {availableDenominators.map(denominator => (
+                    <option key={denominator} value={denominator}>{denominator}</option>
+                  ))}
+                </select>
+              </>
+            )}
+            
           </div>
           <div className="flex items-center space-x-2">
+{/* ... (existing zoom and layers buttons) */}
             <button
               onClick={() => setZoomLevel(Math.max(1, zoomLevel - 1))}
               className="p-1.5 text-slate-600 hover:text-slate-800 hover:bg-white rounded-lg transition-colors"
@@ -206,6 +276,7 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
       {/* Map Display using Leaflet */}
       <div className="relative h-80">
         <MapContainer
+// ... (existing MapContainer props)
           center={[centerLat, centerLng]}
           zoom={zoomLevel}
           scrollWheelZoom={true}
@@ -220,20 +291,21 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
           {/* Use the GeoJSON component to render the county shapes */}
           {countyData && (
             <GeoJSON
-              key={selectedMetric} // Re-render when metric changes
+              key={selectedMetric + selectedDenominator} // Re-render when metric OR denominator changes
               data={countyData}
               style={getFeatureStyle}
               onEachFeature={(feature, layer) => {
                 const fips = String(feature.properties.GEOID || feature.properties.FIPS || '').padStart(5, '0');
                 const rowData = dataByFips.get(fips);
-                const value = rowData ? rowData[selectedMetric] : 'No data';
+                // 5. Get the display value
+                const value = getDisplayValue(rowData);
                 
                 const countyName = feature.properties.NAME || 'Unknown';
                 
                 layer.bindPopup(`
                   <div>
                     <h3 class="font-semibold">${countyName} County</h3>
-                    <p class="text-sm"><strong>${selectedMetric}:</strong> ${typeof value === 'number' ? value.toLocaleString() : value}</p>
+                    <p class="text-sm"><strong>${getMetricDisplayLabel()}:</strong> ${formatValue(value)}</p>
                     ${fips ? `<p class="text-xs text-gray-500">FIPS: ${fips}</p>` : ''}
                   </div>
                 `);
@@ -241,48 +313,10 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
             />
           )}
 
-          {/* Dataset markers and rectangles */}
-          {datasets.map((dataset) => (
-            <React.Fragment key={dataset.id}>
-              {/* Marker for dataset coordinates */}
-              <Marker position={[dataset.coordinates.lat, dataset.coordinates.lng]}>
-                <Popup>
-                  <h4 className="font-semibold text-slate-800">{dataset.title}</h4>
-                  <p className="text-sm text-slate-600">{dataset.description}</p>
-                  <p className="text-xs text-slate-500 mt-1">Source: {dataset.source}</p>
-                  {dataset.downloadUrl && (
-                    <a href={dataset.downloadUrl} className="text-blue-500 hover:underline text-xs mt-1 block">Download</a>
-                  )}
-                </Popup>
-              </Marker>
-              {/* Bounding box for dataset coverage */}
-              {dataset.boundingBox && (
-                <Rectangle
-                  bounds={[
-                    [dataset.boundingBox.south, dataset.boundingBox.west],
-                    [dataset.boundingBox.north, dataset.boundingBox.east],
-                  ]}
-                  pathOptions={{ color: 'blue', weight: 2, opacity: 0.5, fillOpacity: 0.1 }}
-                >
-                  <Popup>
-                    <h5 className="font-semibold text-slate-800">Coverage Area: {dataset.title}</h5>
-                    <p className="text-sm text-slate-600">Geographic: {dataset.coverage.geographic}</p>
-                    <p className="text-sm text-slate-600">Temporal: {dataset.coverage.temporal}</p>
-                  </Popup>
-                </Rectangle>
-              )}
-            </React.Fragment>
-          ))}
+{/* ... (existing Dataset markers and rectangles) */}
         </MapContainer>
         
-        {/* Interactive Controls Overlay */}
-        <div className="absolute top-4 right-4 z-10">
-          <div className="bg-white rounded-lg shadow-lg p-2 space-y-1">
-            <button className="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded transition-colors">
-              <Move3D className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+{/* ... (existing Interactive Controls Overlay) */}
         
         {/* Legend */}
         {showLayers && (
@@ -291,13 +325,14 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
             <div className="space-y-2">
               {selectedMetric && csvData.length > 0 && (
                 <div className="mb-3">
-                  <div className="text-slate-600 font-medium mb-1">{selectedMetric}</div>
+                  {/* 5. Update Legend Label */}
+                  <div className="text-slate-600 font-medium mb-1">{getMetricDisplayLabel()}</div>
                   <div className="flex items-center space-x-1">
-                    <span className="text-slate-500">{min.toLocaleString()}</span>
+                    <span className="text-slate-500">{formatValue(min)}</span>
                     <div className="flex-1 h-4 rounded" style={{
                       background: 'linear-gradient(to right, #f0f9ff, #bae6fd, #7dd3fc, #38bdf8, #0ea5e9, #0284c7, #0369a1, #075985)'
                     }}></div>
-                    <span className="text-slate-500">{max.toLocaleString()}</span>
+                    <span className="text-slate-500">{formatValue(max)}</span>
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
                     <div className="w-3 h-3 bg-gray-300 rounded"></div>
@@ -305,6 +340,7 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
                   </div>
                 </div>
               )}
+{/* ... (existing Legend items) */}
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                 <span className="text-slate-600">Dataset Location</span>
@@ -319,12 +355,6 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
       </div>
       
       {/* Map Footer */}
-      <div className="p-3 bg-slate-50 text-xs text-slate-500 border-t border-slate-200">
-        <div className="flex items-center justify-between">
-          <span>Showing {datasets.length} dataset{datasets.length !== 1 ? 's' : ''}</span>
-          <span>Interactive map • Click and drag to explore</span>
-        </div>
-      </div>
     </div>
   );
 };

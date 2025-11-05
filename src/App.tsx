@@ -5,6 +5,8 @@ import SearchResults from './components/SearchResults';
 import MapVisualization from './components/MapVisualization';
 import DatasetModal from './components/DatasetModal';
 import { Dataset, CartItem } from './types';
+import ReportPage from './components/ReportPage';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 //Interface for the new backend API response
 interface BackendSearchResult {
@@ -18,6 +20,141 @@ interface BackendSearchResult {
   end_date: string;
   similarity: number;
   embeddingText: string;
+}
+
+function MainGeospatialPage({
+  searchQuery,
+  searchResults,
+  selectedDataset,
+  isLoading,
+  handleSearch,
+  addToCart,
+  isInCart,
+  setSelectedDataset
+}: any) {
+  return (
+    <div className="relative z-10">
+      <main className="container mx-auto px-4 py-8">
+        {/*Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
+            Discover Missouri Geospatial Data
+          </h1>
+          <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
+            Search through Missouri's comprehensive geospatial datasets using natural language queries. 
+            Find demographic, health, environmental, and social data at state and county levels.
+          </p>
+          
+          <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+        </div>
+
+        {/* Main Content Area*/}
+        {searchResults.length > 0 && (
+          <div className="grid lg:grid-cols-2 gap-8 mb-8">
+            {/* Search Results */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-semibold text-slate-800">
+                  Search Results
+                </h2>
+                <span className="text-sm text-slate-500">
+                  {searchResults.length} dataset{searchResults.length !== 1 ? 's' : ''} found
+                  {searchResults.length > 0 && (
+                    <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                      Sorted by relevance
+                    </span>
+                  )}
+                </span>
+              </div>
+              
+              <SearchResults 
+                results={searchResults}
+                onAddToCart={addToCart}
+                onSelectDataset={setSelectedDataset}
+                isInCart={isInCart}
+              />
+            </div>
+
+            {/* Map Visualization */}
+            <div className="lg:sticky lg:top-8 h-fit">
+              <MapVisualization datasets={searchResults} />
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {searchResults.length === 0 && searchQuery && !isLoading && (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 mx-auto mb-6 bg-slate-100 rounded-full flex items-center justify-center">
+              <svg className="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-slate-700 mb-2">No datasets found</h3>
+            <p className="text-slate-500">Try adjusting your search terms. For example: "population data", "health statistics", or "environmental measurements".</p>
+          </div>
+        )}
+
+        {/* Getting Started */}
+        {searchResults.length === 0 && !searchQuery && (
+          <div className="grid md:grid-cols-3 gap-8 mt-16">
+            <div className="text-center p-6">
+              <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">Smart Search</h3>
+              <p className="text-slate-600">Search using natural language. Try "elderly population health data" or "demographic statistics by county".</p>
+            </div>
+            
+            <div className="text-center p-6">
+              <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">Missouri Focus</h3>
+              <p className="text-slate-600">All datasets cover Missouri regions with state and county-level granularity for comprehensive analysis.</p>
+            </div>
+            
+            <div className="text-center p-6">
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6.5-5v5a2 2 0 01-2 2H9a2 2 0 01-2-2v-5m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">Variable-Rich</h3>
+              <p className="text-slate-600">Each dataset contains multiple related variables, giving you comprehensive data for your research.</p>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Dataset Detail Modal */}
+      {selectedDataset && (
+        <DatasetModal 
+          dataset={selectedDataset}
+          onClose={() => setSelectedDataset(null)}
+          onAddToCart={addToCart}
+          isInCart={isInCart(selectedDataset.id)}
+        />
+      )}
+    </div>
+  );
+}
+
+function MapPage({ datasets }: { datasets: Dataset[] }) {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold text-slate-800 mb-6 text-center">
+        Interactive Map Explorer 🗺️
+      </h2>
+      <div className="lg:sticky lg:top-8 h-fit">
+        <MapVisualization datasets={datasets} />
+      </div>
+    </div>
+  );
 }
 
 function App() {
@@ -182,130 +319,206 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/*Background Pattern */}
-      <div className="fixed inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3Ccircle cx='53' cy='53' r='1'/%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }} />
-      </div>
-
-      <div className="relative z-10">
-        <Header 
-          cartItemCount={cartItems.length} 
-          cartItems={cartItems}
-          onRemoveFromCart={removeFromCart}
-        />
+    // 1. BrowserRouter is correctly wrapping the entire application
+    <BrowserRouter>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         
-        <main className="container mx-auto px-4 py-8">
-          {/*Hero Section */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
-              Discover Missouri Geospatial Data
-            </h1>
-            <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
-              Search through Missouri's comprehensive geospatial datasets using natural language queries. 
-              Find demographic, health, environmental, and social data at state and county levels.
-            </p>
-            
-            <SearchBar onSearch={handleSearch} isLoading={isLoading} />
-          </div>
+        {/*Background Pattern (Keep this outside the z-10 div) */}
+        <div className="fixed inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3Ccircle cx='53' cy='53' r='1'/%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }} />
+        </div>
 
-          {/* Main Content Area*/}
-          {searchResults.length > 0 && (
-            <div className="grid lg:grid-cols-2 gap-8 mb-8">
-              {/* Search Results */}
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold text-slate-800">
-                    Search Results
-                  </h2>
-                  <span className="text-sm text-slate-500">
-                    {searchResults.length} dataset{searchResults.length !== 1 ? 's' : ''} found
-                    {searchResults.length > 0 && (
-                      <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                        Sorted by relevance
-                      </span>
-                    )}
-                  </span>
-                </div>
-                
-                <SearchResults 
-                  results={searchResults}
-                  onAddToCart={addToCart}
-                  onSelectDataset={setSelectedDataset}
-                  isInCart={isInCart}
-                />
-              </div>
-
-              {/* Map Visualization */}
-              <div className="lg:sticky lg:top-8 h-fit">
-                <MapVisualization datasets={searchResults} />
-              </div>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {searchResults.length === 0 && searchQuery && !isLoading && (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 mx-auto mb-6 bg-slate-100 rounded-full flex items-center justify-center">
-                <svg className="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-slate-700 mb-2">No datasets found</h3>
-              <p className="text-slate-500">Try adjusting your search terms. For example: "population data", "health statistics", or "environmental measurements".</p>
-            </div>
-          )}
-
-          {/* Getting Started */}
-          {searchResults.length === 0 && !searchQuery && (
-            <div className="grid md:grid-cols-3 gap-8 mt-16">
-              <div className="text-center p-6">
-                <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-2">Smart Search</h3>
-                <p className="text-slate-600">Search using natural language. Try "elderly population health data" or "demographic statistics by county".</p>
-              </div>
-              
-              <div className="text-center p-6">
-                <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-2">Missouri Focus</h3>
-                <p className="text-slate-600">All datasets cover Missouri regions with state and county-level granularity for comprehensive analysis.</p>
-              </div>
-              
-              <div className="text-center p-6">
-                <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6.5-5v5a2 2 0 01-2 2H9a2 2 0 01-2-2v-5m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-2">Variable-Rich</h3>
-                <p className="text-slate-600">Each dataset contains multiple related variables, giving you comprehensive data for your research.</p>
-              </div>
-            </div>
-          )}
-        </main>
-
-        {/* Dataset Detail Modal */}
-        {selectedDataset && (
-          <DatasetModal 
-            dataset={selectedDataset}
-            onClose={() => setSelectedDataset(null)}
-            onAddToCart={addToCart}
-            isInCart={isInCart(selectedDataset.id)}
+        <div className="relative z-10">
+          
+          {/* 2. HEADER stays OUTSIDE of Routes because it appears on ALL pages */}
+          <Header 
+            cartItemCount={cartItems.length} 
+            cartItems={cartItems}
+            onRemoveFromCart={removeFromCart}
           />
-        )}
+          
+          {/* 3. The entire content of the page (Hero, Search, Map) must be wrapped in Routes */}
+          <Routes>
+            {/* Default Route: Redirects root path to the search page */}
+            <Route path="/" element={<Navigate replace to="/data-search" />} />
+
+            {/* Route for the Main Geospatial Search Page */}
+            <Route 
+              path="/data-search" 
+              element={
+                // We render the MainGeospatialPage component here
+                <MainGeospatialPage
+                  searchQuery={searchQuery}
+                  searchResults={searchResults}
+                  selectedDataset={selectedDataset}
+                  isLoading={isLoading}
+                  handleSearch={handleSearch}
+                  addToCart={addToCart}
+                  isInCart={isInCart}
+                  setSelectedDataset={setSelectedDataset} // Pass setSelectedDataset
+                />
+              } 
+            />
+            <Route 
+              path="/map-explorer" 
+              element={<MapPage datasets={searchResults} />} 
+            />
+
+            {/* Route for the New CSV Report Page */}
+            <Route 
+              path="/csv-report" 
+              element={<ReportPage />} 
+            />
+          </Routes>
+          
+          {/* 4. Dataset Modal stays OUTSIDE of Routes so it can overlay any page */}
+          {selectedDataset && (
+            <DatasetModal 
+              dataset={selectedDataset}
+              onClose={() => setSelectedDataset(null)}
+              onAddToCart={addToCart}
+              isInCart={isInCart(selectedDataset.id)}
+            />
+          )}
+
+        </div>
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
 
 export default App;
+
+//   return (
+//     <BrowserRouter>
+//     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+//       {/*Background Pattern */}
+//       <div className="fixed inset-0 opacity-5">
+//         <div className="absolute inset-0" style={{
+//           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='7' cy='7' r='1'/%3E%3Ccircle cx='53' cy='53' r='1'/%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+//         }} />
+//       </div>
+
+//       <div className="relative z-10">
+//         <Header 
+//           cartItemCount={cartItems.length} 
+//           cartItems={cartItems}
+//           onRemoveFromCart={removeFromCart}
+//         />
+        
+//         <main className="container mx-auto px-4 py-8">
+//           {/*Hero Section */}
+//           <div className="text-center mb-12">
+//             <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
+//               Discover Missouri Geospatial Data
+//             </h1>
+//             <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
+//               Search through Missouri's comprehensive geospatial datasets using natural language queries. 
+//               Find demographic, health, environmental, and social data at state and county levels.
+//             </p>
+            
+//             <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+//           </div>
+
+//           {/* Main Content Area*/}
+//           {searchResults.length > 0 && (
+//             <div className="grid lg:grid-cols-2 gap-8 mb-8">
+//               {/* Search Results */}
+//               <div className="space-y-6">
+//                 <div className="flex items-center justify-between">
+//                   <h2 className="text-2xl font-semibold text-slate-800">
+//                     Search Results
+//                   </h2>
+//                   <span className="text-sm text-slate-500">
+//                     {searchResults.length} dataset{searchResults.length !== 1 ? 's' : ''} found
+//                     {searchResults.length > 0 && (
+//                       <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+//                         Sorted by relevance
+//                       </span>
+//                     )}
+//                   </span>
+//                 </div>
+                
+//                 <SearchResults 
+//                   results={searchResults}
+//                   onAddToCart={addToCart}
+//                   onSelectDataset={setSelectedDataset}
+//                   isInCart={isInCart}
+//                 />
+//               </div>
+
+//               {/* Map Visualization */}
+//               <div className="lg:sticky lg:top-8 h-fit">
+//                 <MapVisualization datasets={searchResults} />
+//               </div>
+//             </div>
+//           )}
+
+//           {/* Empty State */}
+//           {searchResults.length === 0 && searchQuery && !isLoading && (
+//             <div className="text-center py-16">
+//               <div className="w-24 h-24 mx-auto mb-6 bg-slate-100 rounded-full flex items-center justify-center">
+//                 <svg className="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+//                 </svg>
+//               </div>
+//               <h3 className="text-xl font-semibold text-slate-700 mb-2">No datasets found</h3>
+//               <p className="text-slate-500">Try adjusting your search terms. For example: "population data", "health statistics", or "environmental measurements".</p>
+//             </div>
+//           )}
+
+//           {/* Getting Started */}
+//           {searchResults.length === 0 && !searchQuery && (
+//             <div className="grid md:grid-cols-3 gap-8 mt-16">
+//               <div className="text-center p-6">
+//                 <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+//                   <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+//                   </svg>
+//                 </div>
+//                 <h3 className="text-lg font-semibold text-slate-800 mb-2">Smart Search</h3>
+//                 <p className="text-slate-600">Search using natural language. Try "elderly population health data" or "demographic statistics by county".</p>
+//               </div>
+              
+//               <div className="text-center p-6">
+//                 <div className="w-16 h-16 mx-auto mb-4 bg-teal-100 rounded-full flex items-center justify-center">
+//                   <svg className="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+//                   </svg>
+//                 </div>
+//                 <h3 className="text-lg font-semibold text-slate-800 mb-2">Missouri Focus</h3>
+//                 <p className="text-slate-600">All datasets cover Missouri regions with state and county-level granularity for comprehensive analysis.</p>
+//               </div>
+              
+//               <div className="text-center p-6">
+//                 <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+//                   <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+//                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6.5-5v5a2 2 0 01-2 2H9a2 2 0 01-2-2v-5m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+//                   </svg>
+//                 </div>
+//                 <h3 className="text-lg font-semibold text-slate-800 mb-2">Variable-Rich</h3>
+//                 <p className="text-slate-600">Each dataset contains multiple related variables, giving you comprehensive data for your research.</p>
+//               </div>
+//             </div>
+//           )}
+//         </main>
+
+//         {/* Dataset Detail Modal */}
+//         {selectedDataset && (
+//           <DatasetModal 
+//             dataset={selectedDataset}
+//             onClose={() => setSelectedDataset(null)}
+//             onAddToCart={addToCart}
+//             isInCart={isInCart(selectedDataset.id)}
+//           />
+//         )}
+//       </div>
+//     </div>
+//   </BrowserRouter>
+//   );
+// }
+
+// export default App;
+

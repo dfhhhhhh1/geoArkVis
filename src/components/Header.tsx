@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Globe, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ShoppingCart, Globe, User, BarChart2, Map } from 'lucide-react';
 import ShoppingCartModal from './ShoppingCartModal';
 import { CartItem } from '../types';
 
@@ -30,8 +31,28 @@ const Header: React.FC<HeaderProps> = ({ cartItemCount, cartItems, onRemoveFromC
 
             {/* Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="#" className="text-slate-600 hover:text-slate-800 transition-colors">Browse</a>
-              <a href="#" className="text-slate-600 hover:text-slate-800 transition-colors">Collections</a>
+            <Link 
+                to="/data-search" 
+                className="text-slate-600 hover:text-slate-800 transition-colors font-medium"
+              >
+                Data Search
+              </Link>
+              
+              <Link 
+                to="/map-explorer" 
+                className="flex items-center space-x-2 text-slate-600 hover:text-blue-600 transition-colors font-medium"
+              >
+                <Map className="w-4 h-4" />
+                <span>Map Explorer</span>
+              </Link>
+              {/* 3. Add the new link to the CSV Report Page */}
+              <Link 
+                to="/csv-report" 
+                className="flex items-center space-x-2 text-slate-600 hover:text-blue-600 transition-colors font-medium"
+              >
+                <BarChart2 className="w-4 h-4" />
+                <span>CSV Report Tool</span>
+              </Link>
               <a href="#" className="text-slate-600 hover:text-slate-800 transition-colors">Tools</a>
               <a href="#" className="text-slate-600 hover:text-slate-800 transition-colors">Help</a>
             </nav>
