@@ -1,0 +1,15 @@
+
+> backend@1.0.0 start
+> ts-node server.js
+
+Starting semantic search server...
+Loading variables from CSV...
+Loaded 4555 variables from CSV
+Generating embeddings...
+Generated 4555 embeddings with dimension 384
+✅ Semantic search system ready!
+🚀 Semantic search backend running on http://localhost:4000
+📖 API endpoints:
+   GET /api/search?q=your+query
+   GET /api/health
+   GET /api/mock-search?q=your+query (fallback)
