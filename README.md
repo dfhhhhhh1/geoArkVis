@@ -10,3 +10,10 @@ docker compose up -d --build
 
 
 # This Process should take around ~6 minutes depending on hardware
+
+For changes to one file in the backend, you can run this command to update the docker container: 
+docker-compose up -d --build backend
+
+For frontend:
+docker-compose up -d --build frontend
+

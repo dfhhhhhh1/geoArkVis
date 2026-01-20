@@ -12,8 +12,8 @@ COPY package*.json ./
 RUN npm install
 
 # Python deps
-RUN pip3 install numpy sentence_transformers
-
+RUN pip3 install numpy sentence_transformers nltk
+RUN python3 -c "import nltk; nltk.download('wordnet'); nltk.download('omw-1.4')"
 COPY . .
 
 EXPOSE 4000

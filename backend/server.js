@@ -78,29 +78,45 @@ async function loadVariablesFromCSV(csvFilePath) {
 const pythonEmbeddingScript = `
 import sys
 import json
-import numpy as np
+import re
+import nltk
+from nltk.stem import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer
 
+# Download necessary NLP data
+try:
+    nltk.data.find('corpora/wordnet')
+except LookupError:
+    nltk.download('wordnet')
+    nltk.download('omw-1.4')
+
+lemmatizer = WordNetLemmatizer()
+
+def clean_and_lemmatize(text):
+    # 1. Remove special characters (|, ", (, ), etc.)
+    text = re.sub(r'[\\|\\"\\(\\)\\[\\]\\{\\}\\/\\,]', ' ', text)
+    # 2. Lowercase and split
+    words = text.lower().split()
+    # 3. Lemmatize (matches 'running' to 'run', 'cities' to 'city')
+    lemmatized = [lemmatizer.lemmatize(w) for w in words]
+    return " ".join(lemmatized)
+
 def main():
-    # Load model
     model = SentenceTransformer('all-MiniLM-L6-v2')
-    
-    # Read input from stdin
     input_data = json.loads(sys.stdin.read())
     texts = input_data['texts']
     
-    # Generate embeddings
-    embeddings = model.encode(texts)
+    # Process all texts for lemmatization
+    processed_texts = [clean_and_lemmatize(t) for t in texts]
     
-    # Convert to list for JSON serialization
-    embeddings_list = embeddings.tolist()
+    # Generate embeddings on the processed text
+    embeddings = model.encode(processed_texts)
     
-    # Output as JSON
     result = {
-        'embeddings': embeddings_list,
-        'dimension': len(embeddings_list[0]) if embeddings_list else 0
+        'embeddings': embeddings.tolist(),
+        'processed_texts': processed_texts, # Return cleaned text for keyword matching
+        'dimension': len(embeddings[0]) if len(embeddings) > 0 else 0
     }
-    
     print(json.dumps(result))
 
 if __name__ == '__main__':
@@ -183,6 +199,8 @@ function cosineSimilarity(vecA, vecB) {
   return dotProduct / (normA * normB);
 }
 
+let processedVariablesText = [];
+
 // Initialize embeddings at startup
 async function initializeEmbeddings() {
   try {
@@ -204,26 +222,41 @@ async function initializeEmbeddings() {
     console.log("Generating embeddings...");
     const texts = variables.map(v => v.embeddingText);
     
-    const embeddingResult = await generateEmbeddings(texts);
-    embeddings = embeddingResult.embeddings;
-    
-    console.log(`Generated ${embeddings.length} embeddings with dimension ${embeddingResult.dimension}`);
+    const result = await generateEmbeddings(texts);
+    embeddings = result.embeddings;
+  
+    processedVariablesText = result.processed_texts; // Store the "clean" versions
+
+    console.log(`Generated ${embeddings.length} embeddings with dimension ${result.dimension}`);
     
     if (embeddings.length !== variables.length) {
       throw new Error("Mismatch between number of variables and embeddings");
     }
     
     isEmbeddingsReady = true;
-    console.log("✅ Semantic search system ready!");
+    console.log("Semantic search system ready!");
     
   } catch (error) {
-    console.error("❌ Failed to initialize embeddings:", error.message);
+    console.error("Failed to initialize embeddings:", error.message);
     console.error("Make sure you have:");
     console.error("1. Python installed with sentence-transformers library");
     console.error("2. CSV file in the correct location");
     console.error("3. Sufficient memory for embedding generation");
     process.exit(1);
   }
+}
+
+function getKeywordScore(queryProcessed, documentProcessed) {
+  const queryWords = new Set(queryProcessed.split(/\s+/));
+  const docWords = new Set(documentProcessed.split(/\s+/));
+  
+  let matches = 0;
+  queryWords.forEach(word => {
+    if (docWords.has(word)) matches++;
+  });
+  
+  // Return a ratio: percentage of query words found in the document
+  return queryWords.size > 0 ? matches / queryWords.size : 0;
 }
 
 // Search endpoint
@@ -240,35 +273,46 @@ app.get("/api/search", async (req, res) => {
       return res.json([]);
     }
     
-    console.log(`🔍 Searching for: "${query}"`);
+    console.log(`Hybrid Searching for: "${query}"`);
     
     // Generate embedding for query
-    const queryEmbeddingResult = await generateEmbeddings([query.toLowerCase()]);
-    const queryEmbedding = queryEmbeddingResult.embeddings[0];
-    
+    const queryResult = await generateEmbeddings([query]);
+    const queryEmbedding = queryResult.embeddings[0];
+    const queryCleaned = queryResult.processed_texts[0];
+
     // Calculate similarities
-    const similarities = embeddings.map((embedding, index) => ({
-      variable: variables[index],
-      similarity: cosineSimilarity(queryEmbedding, embedding)
-    }));
+    const results = embeddings.map((emb, i) => {
+      const semanticScore = cosineSimilarity(queryEmbedding, emb);
+      const keywordScore = getKeywordScore(queryCleaned, processedVariablesText[i]);
+      
+      // Combine scores: 70% Semantic weight, 30% Keyword weight
+      const hybridScore = (semanticScore * 0.7) + (keywordScore * 0.3);
+
+      return {
+        variable: variables[i],
+        score: hybridScore,
+        details: { semanticScore, keywordScore }
+      };
+    });
     
-    // Sort by similarity (descending) and take top results
-    similarities.sort((a, b) => b.similarity - a.similarity);
+    const topResults = results
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 20)
+      .map(item => ({
+        dataset_id: item.variable.dataset_id,
+        attr_id: item.variable.attr_id,
+        attr_label: item.variable.attr_label,
+        attr_desc: item.variable.attr_desc,
+        tags: item.variable.tags,
+        entity_type: item.variable.entity_type,
+        start_date: item.variable.start_date,
+        end_date: item.variable.end_date,
+        score: Math.round(item.score * 1000) / 1000, 
+        match_type: item.details.keywordScore > 0 ? "Hybrid" : "Semantic",
+        semantic_boost: Math.round(item.details.semanticScore * 100) / 100
+      }));
     
-    const topResults = similarities.slice(0, 20).map(item => ({
-      dataset_id: item.variable.dataset_id,
-      attr_id: item.variable.attr_id,
-      attr_label: item.variable.attr_label,
-      attr_desc: item.variable.attr_desc,
-      tags: item.variable.tags,
-      entity_type: item.variable.entity_type,
-      start_date: item.variable.start_date,
-      end_date: item.variable.end_date,
-      similarity: Math.round(item.similarity * 1000) / 1000, // Round to 3 decimal places
-      embeddingText: item.variable.embeddingText // Include for debugging
-    }));
-    
-    console.log(`📊 Found ${topResults.length} results, top similarity: ${topResults[0]?.similarity || 0}`);
+    console.log(`Found ${topResults.length} results, top similarity: ${topResults[0]?.score || 0}`);
     
     res.json(topResults);
     

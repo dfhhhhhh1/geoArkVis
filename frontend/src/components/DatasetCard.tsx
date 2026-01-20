@@ -34,10 +34,10 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
                 onClick={() => onSelect(dataset)}>
               {dataset.title}
             </h3>
-            {dataset.similarity && (
+            {dataset.score && (
               <div className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
                 <Star className="w-3 h-3 fill-current" />
-                <span>{(dataset.similarity * 100).toFixed(0)}%</span>
+                <span>{(dataset.score * 100).toFixed(0)}%</span>
               </div>
             )}
           </div>
@@ -102,7 +102,7 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
           </p>
           <div className="space-y-2">
             {dataset.variables
-              .sort((a, b) => b.similarity - a.similarity)
+              .sort((a, b) => b.score - a.score)
               .slice(0, 3)
               .map((variable) => (
               <div key={variable.id} className="flex items-start space-x-2">
@@ -113,7 +113,7 @@ const DatasetCard: React.FC<DatasetCardProps> = ({
                   </p>
                   <div className="flex items-center space-x-2 mt-1">
                     <span className="text-xs text-slate-500">
-                      Match: {(variable.similarity * 100).toFixed(0)}%
+                      Match: {(variable.score * 100).toFixed(0)}%
                     </span>
                   </div>
                 </div>
