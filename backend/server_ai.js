@@ -24,7 +24,7 @@ let isEmbeddingsReady = false;
 
 // Initialize Ollama LLM for query refinement
 const llm = new ChatOllama({
-  model: "llama3.1",
+  model: "gemma3:4b",
   temperature: 0.3, // Lower temperature for more focused refinement
   baseUrl: "http://localhost:11434", // Default Ollama URL
 });

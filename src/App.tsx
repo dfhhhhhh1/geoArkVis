@@ -38,10 +38,10 @@ function MainGeospatialPage({
         {/*Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
-            Discover Missouri Geospatial Data
+            Discover Geospatial Data
           </h1>
           <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
-            Search through Missouri's comprehensive geospatial datasets using natural language queries. 
+            Search through a continually growing number of geospatial datasets using natural language queries. 
             Find demographic, health, environmental, and social data at state and county levels.
           </p>
           
@@ -114,8 +114,8 @@ function MainGeospatialPage({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-slate-800 mb-2">Missouri Focus</h3>
-              <p className="text-slate-600">All datasets cover Missouri regions with state and county-level granularity for comprehensive analysis.</p>
+              <h3 className="text-lg font-semibold text-slate-800 mb-2">United States Focus</h3>
+              <p className="text-slate-600">All datasets cover US regions with state and county-level granularity for comprehensive analysis.</p>
             </div>
             
             <div className="text-center p-6">
@@ -197,9 +197,9 @@ function App() {
       
       //Determine coverage based on entity type
       const coverage = {
-        geographic: firstResult.entity_type === 'STATE' ? 'Missouri State' : 
-                   firstResult.entity_type === 'COUNTY' ? 'Missouri Counties' : 
-                   'Missouri Region',
+        geographic: firstResult.entity_type === 'STATE' ? 'State' : 
+                   firstResult.entity_type === 'COUNTY' ? 'County' : 
+                   'Region',
         temporal: `${firstResult.start_date} - ${firstResult.end_date}`
       };
 
@@ -207,7 +207,7 @@ function App() {
         id: datasetId,
         title: `${firstResult.entity_type.toLowerCase()} Dataset - ${datasetId.substring(0, 8)}`,
         description: `Contains ${results.length} variable${results.length > 1 ? 's' : ''} including ${results[0].attr_desc}${results.length > 1 ? ' and others' : ''}`,
-        source: 'Missouri Geographic Data Repository',
+        source: 'Geographic Data Repository',
         fields: allFields,
         tags: uniqueTags,
         fileSize: estimateFileSize(results.length, firstResult.entity_type),

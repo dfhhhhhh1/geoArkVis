@@ -22,7 +22,7 @@ function createEmbeddingText(row) {
   
   if (row.attr_label) parts.push(row.attr_label.trim());
   if (row.attr_desc) parts.push(row.attr_desc.trim());
-  
+  if (row.data_clean) parts.push(row.data_clean.trim());
   // Parse tags - handle both array format and string format
   if (row.tags) {
     try {

@@ -274,7 +274,7 @@ const MapVisualization: React.FC<MapVisualizationProps> = ({ datasets }) => {
       </div>
       
       {/* Map Display using Leaflet */}
-      <div className="relative h-80">
+      <div className="relative relative h-80 md:h-[600px]">
         <MapContainer
 // ... (existing MapContainer props)
           center={[centerLat, centerLng]}
