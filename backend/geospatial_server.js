@@ -7,6 +7,9 @@ const path = require("path");
 
 console.log("Starting semantic search server...");
 
+const enhancedSearch = require('./enhanced_search_server');
+
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -21,7 +24,7 @@ let isEmbeddingsReady = false;
 // ============================================================================
 // Update this URL to point to your local LLM server
 const LOCAL_LLM_ENDPOINT = process.env.LLM_ENDPOINT || "http://127.0.0.1:11434/api/chat";
-const LOCAL_LLM_MODEL = process.env.LLM_MODEL || "deepseek-r1:8b"; //deepseek-r1:8b e.g., "llama2", "mistral", etc.
+const LOCAL_LLM_MODEL = process.env.LLM_MODEL || "gemma3:4b"; //deepseek-r1:8b e.g., "llama2", "mistral", etc.
 
 // Helper function to normalize and combine text fields for embedding
 function createEmbeddingText(row) {
@@ -606,6 +609,9 @@ app.get("/api/mock-search", (req, res) => {
   
   res.json(filtered);
 });
+
+app.use("/api", enhancedSearch.createEnhancedRouter(performSemanticSearch));
+
 
 const PORT = process.env.PORT || 4000;
 
