@@ -3,7 +3,7 @@ FROM node:20 AS build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm install papaparse chart.js react-chartjs-2 react-loading-skeleton lucide-react lodash
 
 COPY . .
 RUN npm run build
