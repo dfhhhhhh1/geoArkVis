@@ -651,20 +651,23 @@ async function verifyResultsWithLLM(originalQuery, decomposition, allResults) {
       
     const keepIds = parsed?.keep_ids || [];
     console.log(`    Reasoning: ${parsed?.reasoning || "None provided"}`);
-
+    const reasoning = parsed?.reasoning || "No reasoning provided by LLM.";
     const filtered = allResults.filter(r => keepIds.includes(r.attr_id));
     
     if (filtered.length === 0) {
       console.log(`     LLM returned 0 results. Falling back to top 5 hybrid matches.`);
-      return allResults.slice(0, 5); 
+      return { 
+        results: allResults.slice(0, 5), 
+        reasoning: "LLM filtered out all results. Showing top 5 hybrid matches as fallback." 
+      };
     }
 
     console.log(`     LLM filtered: ${allResults.length} → ${filtered.length} results`);
-    return filtered;
+    return { results: filtered, reasoning: reasoning };
 
   } catch (error) {
     console.error(`     Verification Error: ${error.message}`);
-    return allResults.slice(0, 5);
+    return { results: allResults.slice(0, 5), reasoning: "Verification failed due to error." };
   }
 }
 
@@ -741,10 +744,12 @@ async function unifiedSearch(query, options = {}) {
   
   // STEP 3: LLM Verification (optional)
   let finalResults = uniqueResults;
+  let llmReasoning = null;
   
   if (useLLMFilter && uniqueResults.length > 0) {
-    console.log(`\n[STEP 3] LLM Verification & Filtering`);
-    finalResults = await verifyResultsWithLLM(query, decomposition, uniqueResults);
+    const verification = await verifyResultsWithLLM(query, decomposition, uniqueResults);
+    finalResults = verification.results;
+    llmReasoning = verification.reasoning;
   } else {
     console.log(`\n[STEP 3] Skipping LLM verification`);
   }
@@ -770,6 +775,7 @@ async function unifiedSearch(query, options = {}) {
   return {
     query,
     decomposition,
+    llm_reasoning: llmReasoning,
     results_by_query: resultsByQuery,
     results_by_purpose: resultsByPurpose,
     all_results: finalResults,

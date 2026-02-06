@@ -303,12 +303,34 @@ function ReportPage() {
     return <span className={`px-2 py-0.5 text-xs font-medium rounded-full border ${s[purpose] || 'bg-gray-100 text-gray-600 border-gray-200'}`}>{purpose}</span>;
   };
 
+  // [Search around line 273]
   const SCard = ({ item, index }: { item: UnifiedSearchResultItem; index: number }) => (
-    <div key={`${item.attr_id}-${index}`} className="bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all">
-      <div className="flex items-start justify-between mb-2"><div className="flex-1 min-w-0"><h5 className="font-semibold text-gray-800 text-sm truncate">{item.attr_desc}</h5><p className="text-xs text-gray-500 mt-0.5 font-mono">{item.attr_orig}</p></div><Badge purpose={item.search_purpose} /></div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-2"><span>Dataset: <b className="text-gray-700">{item.dataset_clean}</b></span><span>Entity: <b className="text-gray-700">{item.entity_type}</b></span></div>
-      <div className="flex items-center gap-3 mt-3"><div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden"><div className="h-full bg-gradient-to-r from-blue-500 to-teal-500 rounded-full" style={{ width: `${(item.hybrid_score * 100).toFixed(0)}%` }} /></div><span className="text-xs font-mono font-medium text-gray-600 w-14 text-right">{(item.hybrid_score * 100).toFixed(1)}%</span></div>
-      <div className="flex gap-2 mt-1 text-[10px]"><span className="text-gray-400">Sem: {(item.semantic_score * 100).toFixed(0)}%</span><span className="text-gray-400">Kw: {(item.keyword_score * 100).toFixed(0)}%</span></div>
+    <div key={`${item.attr_id}-${index}`} className="bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-md transition-all relative overflow-hidden group">
+      {/* HIGHLIGHT: Add a subtle green accent to show it passed verification */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-teal-500"></div>
+      
+      <div className="flex items-start justify-between mb-2 pl-2">
+        <div className="flex-1 min-w-0">
+          <h5 className="font-semibold text-gray-800 text-sm truncate" title={item.attr_desc}>{item.attr_desc}</h5>
+          <p className="text-xs text-gray-500 mt-0.5 font-mono">{item.attr_orig}</p>
+        </div>
+        <Badge purpose={item.search_purpose} />
+      </div>
+      
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mt-2 pl-2">
+        <span>Dataset: <b className="text-gray-700">{item.dataset_clean}</b></span>
+        <span>Entity: <b className="text-gray-700">{item.entity_type}</b></span>
+      </div>
+
+      {/* Match Score Bar */}
+      <div className="flex items-center gap-3 mt-3 pl-2">
+        <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-blue-500 to-teal-500 rounded-full" style={{ width: `${(item.hybrid_score * 100).toFixed(0)}%` }} />
+        </div>
+        <div className="flex flex-col items-end">
+          <span className="text-xs font-mono font-medium text-gray-600">{(item.hybrid_score * 100).toFixed(1)}%</span>
+        </div>
+      </div>
     </div>
   );
 
@@ -415,7 +437,24 @@ function ReportPage() {
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <SecHead title={`Results (${searchResponse.all_results.length})`} k="results" icon={<Database className="w-5 h-5 text-blue-600" />} />
-              {exp.results && <div className="mt-2 space-y-6">{searchResponse.results_by_query.map((rq, qi) => <div key={qi}><div className="flex items-center gap-2 mb-2"><span className="text-sm font-semibold text-gray-700">"{rq.query}"</span><Badge purpose={rq.purpose} /><span className="text-xs text-gray-400">({rq.results.length})</span></div><div className="grid grid-cols-1 md:grid-cols-2 gap-3">{rq.results.map((it, i) => <SCard key={i} item={it} index={i} />)}</div></div>)}</div>}
+
+              {exp.results && <div className="mt-2 space-y-6">
+                {searchResponse.llm_reasoning && (
+                  <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-blue-100 rounded-lg p-4 mb-5">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1 bg-white p-1.5 rounded-full shadow-sm border border-blue-100">
+                        <Brain className="w-4 h-4 text-indigo-600" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-indigo-900 mb-1">AI Verification Logic</h4>
+                        <p className="text-sm text-indigo-800 leading-relaxed">
+                          {searchResponse.llm_reasoning}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {searchResponse.results_by_query.map((rq, qi) => <div key={qi}><div className="flex items-center gap-2 mb-2"><span className="text-sm font-semibold text-gray-700">"{rq.query}"</span><Badge purpose={rq.purpose} /><span className="text-xs text-gray-400">({rq.results.length})</span></div><div className="grid grid-cols-1 md:grid-cols-2 gap-3">{rq.results.map((it, i) => <SCard key={i} item={it} index={i} />)}</div></div>)}</div>}
             </div>
           </>)}
           {!searchResponse && !isSearching && <div className="text-center py-16 text-gray-400"><Search className="w-16 h-16 mx-auto mb-4 opacity-30" /><p>Enter a query to search the geospatial catalog</p></div>}

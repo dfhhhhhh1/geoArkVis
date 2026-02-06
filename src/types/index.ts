@@ -128,5 +128,6 @@ export interface UnifiedSearchResponse {
   results_by_query: UnifiedSearchResultsByQuery[];
   results_by_purpose: UnifiedSearchResultsByPurpose;
   all_results: UnifiedSearchResultItem[];
+  llm_reasoning?: string | null;
   stats: UnifiedSearchStats;
 }
