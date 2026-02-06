@@ -171,6 +171,19 @@ function MainGeospatialPage({
   );
 }
 
+function MapPage({ datasets }: { datasets: Dataset[] }) {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold text-slate-800 mb-6 text-center">
+        Interactive Map Explorer
+      </h2>
+      <div className="lg:sticky lg:top-8 h-fit">
+        <MapVisualization datasets={datasets} />
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Dataset[]>([]);
@@ -369,6 +382,10 @@ function App() {
                   unifiedResponse={unifiedResponse}
                 />
               } 
+            />
+            <Route 
+              path="/map-explorer" 
+              element={<MapPage datasets={searchResults} />} 
             />
 
             <Route 
