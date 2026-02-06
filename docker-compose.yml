@@ -1,5 +1,14 @@
 
 services:
+  db:
+    image: postgis/postgis:15-3.3 # Use PostGIS image
+    environment:
+      - POSTGRES_DB=mygisdb
+      - POSTGRES_USER=samspell
+      - POSTGRES_PASSWORD=yourpassword # Avoid empty passwords in Docker
+    ports:
+      - "5432:5432"
+
   frontend:
     build: ./frontend
     ports:
@@ -13,6 +22,21 @@ services:
       - "4000:4000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    depends_on:
+      - db
     environment:
       - NODE_ENV=production
       - PORT=4000
+      - DB_HOST=db  # Match the service name above
+      - DB_NAME=mygisdb
+      - DB_USER=samspell
+      - DB_PASS=yourpassword
+
+  ml-service:
+    build:
+      context: ./ml_service  # Change this to the folder path
+      dockerfile: Dockerfile.ml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8000:8000"

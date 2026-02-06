@@ -2,11 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "unified_search_server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
-    "start": "ts-node server.js"
+    "start": "ts-node ts-node server.js"
   },
   "keywords": [],
   "author": "",
