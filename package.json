@@ -10,15 +10,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
+    "d3": "^7.9.0",
     "langchain": "^1.0.1",
     "leaflet": "^1.9.4",
     "localtunnel": "^2.0.2",
     "lodash": "^4.17.23",
     "lucide-react": "^0.514.0",
     "ollama": "^0.6.0",
+    "papaparse": "^5.5.3",
     "react": "^19.1.0",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.1.0",
-    "react-leaflet": "^5.0.0"
+    "react-leaflet": "^5.0.0",
+    "react-loading-skeleton": "^3.5.0",
+    "react-router-dom": "^7.14.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",

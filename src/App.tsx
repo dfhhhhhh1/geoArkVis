@@ -28,8 +28,7 @@ function MainGeospatialPage({
             Discover Geospatial Data
           </h1>
           <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
-            Search through a continually growing number of geospatial datasets using natural language queries. 
-            Find demographic, health, environmental, and social data at state and county levels.
+            Use natural language to search through US's comprehensive geospatial datasets on demographic, health, environmental, and social data at state and county levels.
           </p>
           
           <SearchBar onSearch={handleSearch} isLoading={isLoading} />

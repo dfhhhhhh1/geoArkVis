@@ -291,6 +291,25 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Download in ShoppingCartModal.tsx
+app.get("/api/download", (req, res) => {
+  const datatsetIDs = req.query.dataset_id?.split(",") || [];
+  const filtered = variables.filter(v => datatsetIDs.includes(v.dataset_id));
+
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", "attachment; filename=data.csv");
+  const header = "dataset_id,attr_id,attr_label,attr_desc,tags,entity_type\n";
+  const rows = filtered.map(v => [
+    v.dataset_id,
+    v.attr_id,
+    `"${(v.attr_label || "").replace(/"/g, '""')}"`,
+    `"${(v.attr_desc || "").replace(/"/g, '""')}"`,
+    `"${(v.tags || "").replace(/"/g, '""')}"`,
+    v.entity_type
+  ].join(",")).join("\n");
+  res.send(header + rows);
+});
+
 // Fallback for the existing mock datasets (for backward compatibility)
 app.get("/api/mock-search", (req, res) => {
   const query = (req.query.q || "").toLowerCase();
